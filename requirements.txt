@@ -1,1 +1,9 @@
+certifi==2022.6.15
+influxdb-client==1.32.0
 pyserial==3.5
+python-dateutil==2.8.2
+python-dotenv==0.21.0
+reactivex==4.0.4
+six==1.16.0
+typing-extensions==4.3.0
+urllib3==1.26.12
