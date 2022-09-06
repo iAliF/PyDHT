@@ -31,6 +31,8 @@ def start():
             print("Something went wrong. Check connections and run this script again.")
             break
 
+    serial.close()
+
 
 def main():
     try:
