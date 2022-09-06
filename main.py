@@ -5,7 +5,7 @@ from re import Pattern
 
 from serial import Serial, SerialException
 
-RE_PATTERN: Pattern = re.compile(r'(\d+\.\d+)\|(\d+\.\d+)\|(\d+\.\d+)')
+RE_PATTERN: Pattern = re.compile(r'(\d+)\|(\d+\.\d+)\|(\d+\.\d+)\|(\d+\.\d+)')
 
 parser = argparse.ArgumentParser()
 serial: Serial
@@ -34,10 +34,10 @@ def start():
                 print("Invalid data")
                 continue
 
-            temp, hum, index = match.groups()
+            u_time, temp, hum, index = match.groups()
 
             if args.verbose:
-                print(f"Temperature: {temp}°C | Humidity: {hum}% | Heat Index: {index}°C")
+                print(f"{u_time} | Temperature: {temp}°C | Humidity: {hum}% | Heat Index: {index}°C")
         except KeyboardInterrupt:
             print("Exiting ...")
             break
