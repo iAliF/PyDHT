@@ -1,14 +1,20 @@
 import argparse
 import re
-import time
+from datetime import datetime
 from re import Pattern
 
+from influxdb_client import InfluxDBClient, Point
 from serial import Serial, SerialException
+
+import config
 
 RE_PATTERN: Pattern = re.compile(r'(\d+)\|(\d+\.\d+)\|(\d+\.\d+)\|(\d+\.\d+)')
 
 parser = argparse.ArgumentParser()
 serial: Serial
+
+client = InfluxDBClient(f"http://{config.HOST}:{config.PORT}", config.TOKEN, org=config.ORG, bucket=config.BUCKET)
+write_api = client.write_api()
 
 
 def sync_time():
@@ -16,7 +22,7 @@ def sync_time():
     serial.timeout = 3
 
     while True:
-        serial.write(f"TIME|{time.time()}".encode())
+        serial.write(f"TIME|{datetime.utcnow().timestamp()}".encode())
         data = serial.readline().decode().strip()
         if data == 'SYNCED':
             break
@@ -34,10 +40,22 @@ def start():
                 print("Invalid data")
                 continue
 
-            u_time, temp, hum, index = match.groups()
+            u_time, temp, hum, index = map(float, match.groups())
+            u_time = int(u_time)
 
             if args.verbose:
                 print(f"{u_time} | Temperature: {temp}°C | Humidity: {hum}% | Heat Index: {index}°C")
+
+            point = Point(config.NAME) \
+                .field('temperature', temp) \
+                .field('humidity', hum) \
+                .field('heat_index', index) \
+                .time(datetime.fromtimestamp(u_time))
+            write_api.write(
+                config.BUCKET,
+                config.ORG,
+                point
+            )
         except KeyboardInterrupt:
             print("Exiting ...")
             break
@@ -45,6 +63,8 @@ def start():
             print("Something went wrong. Check connections and run this script again.")
             break
 
+    client.close()
+    write_api.close()
     serial.close()
 
 
