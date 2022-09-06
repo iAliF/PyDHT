@@ -4,15 +4,15 @@ from re import Pattern
 
 from serial import Serial, SerialException
 
-parser = argparse.ArgumentParser()
-parser.add_argument('port', type=str, help='Serial port')
-parser.add_argument('baud', type=int, help='Baud rate')
-
 RE_PATTERN: Pattern = re.compile(r'(\d+\.\d+)\|(\d+\.\d+)\|(\d+\.\d+)')
+
+parser = argparse.ArgumentParser()
 serial: Serial
 
 
 def start():
+    print("Starting loop")
+
     while True:
         try:
             data = serial.readline().decode().strip()
@@ -21,8 +21,9 @@ def start():
                 continue
 
             temp, hum, index = match.groups()
-            print(f"Temperature: {temp} | Humidity: {hum} | Heat Index: {index}")
 
+            if args.verbose:
+                print(f"Temperature: {temp}°C | Humidity: {hum}% | Heat Index: {index}°C")
         except KeyboardInterrupt:
             print("Exiting ...")
             break
@@ -32,8 +33,6 @@ def start():
 
 
 def main():
-    args = parser.parse_args()
-
     try:
         global serial
         serial = Serial(args.port, args.baud)
@@ -45,4 +44,9 @@ def main():
 
 
 if __name__ == '__main__':
+    parser.add_argument('port', type=str, help='Serial port')
+    parser.add_argument('baud', type=int, help='Baud rate')
+    parser.add_argument('-v', '--verbose', type=bool, action=argparse.BooleanOptionalAction, help='Verbose mode')
+    args = parser.parse_args()
+
     main()
