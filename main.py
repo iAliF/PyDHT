@@ -1,5 +1,6 @@
 import argparse
 import re
+import time
 from re import Pattern
 
 from serial import Serial, SerialException
@@ -8,6 +9,19 @@ RE_PATTERN: Pattern = re.compile(r'(\d+\.\d+)\|(\d+\.\d+)\|(\d+\.\d+)')
 
 parser = argparse.ArgumentParser()
 serial: Serial
+
+
+def sync_time():
+    print("Syncing time with Arduino")
+    serial.timeout = 3
+
+    while True:
+        serial.write(f"TIME|{time.time()}".encode())
+        data = serial.readline().decode().strip()
+        if data == 'SYNCED':
+            break
+
+    serial.timeout = None
 
 
 def start():
@@ -42,6 +56,7 @@ def main():
         print("couldn't open this port")
         return
 
+    sync_time()
     start()
 
 
