@@ -30,6 +30,19 @@ def sync_time():
     serial.timeout = None
 
 
+def save_data(u_time: int, temp: float, hum: float, index: float):
+    point = Point(config.NAME) \
+        .field('temperature', temp) \
+        .field('humidity', hum) \
+        .field('heat_index', index) \
+        .time(datetime.fromtimestamp(u_time))
+    write_api.write(
+        config.BUCKET,
+        config.ORG,
+        point
+    )
+
+
 def start():
     print("Starting loop")
 
@@ -46,16 +59,8 @@ def start():
             if args.verbose:
                 print(f"{u_time} | Temperature: {temp}°C | Humidity: {hum}% | Heat Index: {index}°C")
 
-            point = Point(config.NAME) \
-                .field('temperature', temp) \
-                .field('humidity', hum) \
-                .field('heat_index', index) \
-                .time(datetime.fromtimestamp(u_time))
-            write_api.write(
-                config.BUCKET,
-                config.ORG,
-                point
-            )
+            save_data(u_time, temp, hum, index)
+
         except KeyboardInterrupt:
             print("Exiting ...")
             break
